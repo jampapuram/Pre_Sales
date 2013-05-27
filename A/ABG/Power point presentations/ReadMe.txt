@@ -1,0 +1,1 @@
+This file is used to store the Power point documents of Pre-Sales.
