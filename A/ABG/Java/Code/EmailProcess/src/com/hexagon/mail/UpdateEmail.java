@@ -182,7 +182,7 @@ public class UpdateEmail {
 				System.out.println("Updated Table...");
 
 				if (mailContent != null) {
-					if (subject != null
+					if (subject != null && mailReqCode != null
 							&& (subject.equalsIgnoreCase("Approval Request")
 									|| subject.equalsIgnoreCase("Approved") || subject
 										.equalsIgnoreCase("Rejected")|| subject.equalsIgnoreCase("Handover to Accounts")||  subject.equalsIgnoreCase("Handover to DP"))) {
