@@ -1,6 +1,5 @@
 package com.hexagon.mail;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,37 +7,10 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
 
-public class Mapping extends Inbox {
+public class Mapping {
 
-	public static void main(String[] args) {
-
-		Inbox inbox = new Inbox();
-		UpdateEmail updateEmailInfo = new UpdateEmail();
-		ExcelAttachmentReader excelAttachmentReader = new ExcelAttachmentReader();
-		CallProcedure callprocedure = new CallProcedure();
-
-		updateEmailInfo.emailInfo(inbox);
-		String xlsPath = "C:\\Users\\admin\\workspace\\EmailProcess\\"
-				+ attachmentName;
-		excelAttachmentReader.displayFromExcel(xlsPath);
-		callprocedure.callOracleStoredProc();
-
-		try {
-
-			File file = new File(xlsPath);
-
-			if (file.delete()) {
-				System.out.println(attachmentName + " is deleted!");
-			} else {
-				System.out.println("Delete operation is failed.");
-			}
-
-		} catch (Exception e) {
-
-			e.printStackTrace();
-
-		}
-
+	// public static void main(String[] args) {
+	public void map() {
 		Connection connection = null;
 		Statement stmt = null;
 		Statement stmt1 = null;
@@ -51,7 +23,9 @@ public class Mapping extends Inbox {
 		Statement stmt8 = null;
 		Statement stmt9 = null;
 		Statement stmt10 = null;
-
+		Statement stmt39 = null;
+		Statement stmt55 = null;
+int newReqCode = 0;
 		try {
 
 			Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -64,47 +38,71 @@ public class Mapping extends Inbox {
 
 		}
 		try {
-			String type_request = "";
-			String subject = "";
-			String applStage = "";
+			String type_request = null;
+			String subject = null;
+			String applStage = null;
 			int org_id = 0;
 			int email_id = 0;
+			String process_flag = null;
+			String preQueryStatement = null;
+			String dupQueryStatement = null;
+			String mappingMainQuery = null;
+
 			Properties prop = new Properties();
 			prop.load(new FileInputStream("config.properties"));
 			connection = DriverManager.getConnection(
 					prop.getProperty("database"), prop.getProperty("dbuser"),
 					prop.getProperty("dbpassword"));
 			// STEP 4: Execute a query
-			System.out.println("Creating statement.1..");
 			stmt = connection.createStatement();
-			String preQueryStatement = "SELECT EAI.TYPE_OF_REQUEST, E.SUBJECT, E.ORG_ID, E.EMAIL_ID FROM EMAIL_ATTACHMENT_INFO EAI,EMAIL_LOG E WHERE EAI.EMAIL_ID = E.EMAIL_ID AND E.SUCCESS_FLAG = 'W' AND EAI.ACTIVE = 'Y'";
-			ResultSet rs = stmt.executeQuery(preQueryStatement);
-			// System.out.println("Result set  "+ rs.next());
-			// STEP 5: Extract data from result set
-			while (rs.next()) {
-				// Retrieve by column name
-				type_request = rs.getString("TYPE_OF_REQUEST");
-				subject = rs.getString("SUBJECT");
-				org_id = rs.getInt("ORG_ID");
-				email_id = rs.getInt("EMAIL_ID");
-				// Display values
-				System.out
-						.println(" Type of Request 22222222: " + type_request);
-				System.out.println(" Subject 1111111: " + subject);
-				System.out.println(" Org Id: " + org_id);
-				System.out.println("Email Id : " + email_id);
+			mappingMainQuery = "SELECT em.PROCESS_FLAG FROM EMAIL_ATTACHMENT_INFO E,Email_log em WHERE e.email_id = EM.EMAIL_ID  and e.email_id = (SELECT MAX(t.email_id) FROM EMAIL_ATTACHMENT_INFO t ) and em.active = 'Y'";
+			ResultSet rsm = stmt.executeQuery(mappingMainQuery);
+			while (rsm.next()) {
+				process_flag = rsm.getString("process_flag");
+				System.out.println("Process Flag : " + process_flag);
 			}
+			if (process_flag.equals("N")) {
+				dupQueryStatement = "SELECT EAI.TYPE_OF_REQUEST, E.SUBJECT, E.ORG_ID, E.EMAIL_ID FROM EMAIL_ATTACHMENT_INFO EAI,EMAIL_LOG E WHERE EAI.EMAIL_ID = E.EMAIL_ID and EAI.email_id = (SELECT MAX(t.email_id) FROM EMAIL_ATTACHMENT_INFO t ) AND E.SUCCESS_FLAG ='D' AND EAI.ACTIVE = 'Y'";
+				ResultSet rs44 = stmt.executeQuery(dupQueryStatement);
+				// System.out.println("Result set  "+ rs.next());
+				// STEP 5: Extract data from result set
+				while (rs44.next()) {
+					System.out.println("dupQueryStatement");
+					// Retrieve by column name
+					type_request = rs44.getString("TYPE_OF_REQUEST");
+					subject = rs44.getString("SUBJECT");
+					org_id = rs44.getInt("ORG_ID");
+					email_id = rs44.getInt("EMAIL_ID");
+				}
+			} else {
+				preQueryStatement = "SELECT EAI.TYPE_OF_REQUEST, E.SUBJECT, E.ORG_ID, E.EMAIL_ID FROM EMAIL_ATTACHMENT_INFO EAI,EMAIL_LOG E WHERE EAI.EMAIL_ID = E.EMAIL_ID and EAI.email_id = (SELECT MAX(t.email_id) FROM EMAIL_ATTACHMENT_INFO t ) AND E.SUCCESS_FLAG ='W' AND EAI.ACTIVE = 'Y'";
+				ResultSet rs = stmt.executeQuery(preQueryStatement);
+				// System.out.println("Result set  "+ rs.next());
+				// STEP 5: Extract data from result set
+				while (rs.next()) {
+					// Retrieve by column name
+					System.out.println("preQueryStatement");
+					type_request = rs.getString("TYPE_OF_REQUEST");
+					subject = rs.getString("SUBJECT");
+					org_id = rs.getInt("ORG_ID");
+					email_id = rs.getInt("EMAIL_ID");
+				}
+			}
+			System.out.println("Creating statement.1. in Mapping ." + org_id
+					+ " " + subject + "" + type_request + "" + email_id);
 
 			if (org_id != 0 && type_request != null && subject != null) {
 				if (org_id != 0 && type_request != null
 						&& type_request.equals("D")) {
-					if (subject.equalsIgnoreCase("Approval Request")) {
+					
+					// Disbursement Stage of the application
+					if (subject.equalsIgnoreCase("Disb Approval Request")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
 
 						// STEP 4: Execute a query
-						System.out.println("Creating statement.2..");
+						System.out.println("Creating statement.2in Mapping .");
 						stmt1 = connection.createStatement();
 						String approvalRequestQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
@@ -125,12 +123,13 @@ public class Mapping extends Inbox {
 											+ applStage);
 						}
 
-					} else if (subject.equalsIgnoreCase("Approved")) {
+					} else if (subject.equalsIgnoreCase("Disb Approval")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
 						// STEP 4: Execute a query
-						System.out.println("Creating statement..3.");
+						System.out
+								.println("Creating statement..3 in Mapping .");
 						stmt2 = connection.createStatement();
 						String approvedQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
@@ -153,11 +152,11 @@ public class Mapping extends Inbox {
 						System.out.println(" Type of the Request : "
 								+ type_request);
 						// STEP 4: Execute a query
-						System.out.println("Creating statement.4..");
+						System.out.println("Creating statement.4.in Mapping .");
 						stmt3 = connection.createStatement();
 						String initQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
-								+ "'AND S.EMAIL_SUBJECT is null AND U.ORG_ID = "
+								+ "'AND S.EMAIL_SUBJECT = 't' AND U.ORG_ID = "
 								+ org_id + "AND U.ACTIVE = 'Y'";
 
 						ResultSet rs3 = stmt3.executeQuery(initQuery);
@@ -169,10 +168,27 @@ public class Mapping extends Inbox {
 							System.out.print(" D Initial Application Stage : "
 									+ applStage);
 						}
+							// Request Code for init mail only
+							
+							// STEP 4: Execute a query
+							stmt39 = connection.createStatement();
+							String reqCode = "select (SEQ_REQUEST_CODE.nextval) Req from dual";
+							ResultSet rs39 = stmt39.executeQuery(reqCode);
+							while (rs39.next()) {
+								newReqCode = rs39.getInt("Req");
+								System.out.println(" New Request Code  : " + newReqCode);
+							}
+							
+							
+							// End of init mail only
+							
+						
 					}
 				} else if (org_id != 0 && type_request != null
 						&& type_request.equals("P")) {
-					if (subject.equalsIgnoreCase("Approval Request")) {
+					
+					// Pledge Stage of the application
+					if (subject.equalsIgnoreCase("Pledge Approval Request")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
@@ -196,7 +212,7 @@ public class Mapping extends Inbox {
 							System.out.print(" P Approval Application Stage : "
 									+ applStage);
 						}
-					} else if (subject.equalsIgnoreCase("Approved")) {
+					} else if (subject.equalsIgnoreCase("Pledge Approval")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
@@ -226,11 +242,11 @@ public class Mapping extends Inbox {
 						System.out.println(" Type of the Request : "
 								+ type_request);
 						// STEP 4: Execute a query
-						System.out.println("Creating statement..7.");
+						System.out.println("Creating statement..7in Mapping .");
 						stmt6 = connection.createStatement();
 						String initQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
-								+ "'AND S.EMAIL_SUBJECT is null AND U.ORG_ID = "
+								+ "'AND S.EMAIL_SUBJECT ='t' AND U.ORG_ID = "
 								+ org_id + "AND U.ACTIVE = 'Y'";
 						ResultSet rs6 = stmt6.executeQuery(initQuery);
 
@@ -241,10 +257,19 @@ public class Mapping extends Inbox {
 							System.out.print(" P Initial Application Stage : "
 									+ applStage);
 						}
+						
+						// STEP 4: Execute a query
+						stmt39 = connection.createStatement();
+						String reqCode = "select (SEQ_REQUEST_CODE.nextval) Req from dual";
+						ResultSet rs39 = stmt39.executeQuery(reqCode);
+						while (rs39.next()) {
+							newReqCode = rs39.getInt("Req");
+							System.out.println(" New Request Code  : " + newReqCode);
+						}
 					}
 				} else if (org_id != 0 && type_request != null
 						&& type_request.equals("R")) {
-					if (subject.equalsIgnoreCase("Approval Request")) {
+					if (subject.equalsIgnoreCase("Release Approval Request")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
@@ -270,12 +295,12 @@ public class Mapping extends Inbox {
 									+ applStage);
 						}
 
-					} else if (subject.equalsIgnoreCase("Approved")) {
+					} else if (subject.equalsIgnoreCase("Release Approval")) {
 						System.out.println(" Subject : " + subject);
 						System.out.println(" Type of the Request : "
 								+ type_request);
 						// STEP 4: Execute a query
-						System.out.println("Creating statement..9.");
+						System.out.println("Creating statement..9in Mapping .");
 						stmt8 = connection.createStatement();
 						String releaseApprovedQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
@@ -301,11 +326,12 @@ public class Mapping extends Inbox {
 						System.out.println(" Type of the Request : "
 								+ type_request);
 						// STEP 4: Execute a query
-						System.out.println("Creating statement..10.");
+						System.out
+								.println("Creating statement..10in Mapping .");
 						stmt9 = connection.createStatement();
 						String initQuery = "SELECT U.APPLSTAGE FROM UM_WORKFLOW_STAGES U ,UM_WF_STAGE_EMAIL_MAPPING S WHERE U.WS_ID = S.WS_ID AND S.TYPE_OF_REQUEST = '"
 								+ type_request
-								+ "'AND S.EMAIL_SUBJECT is null AND U.ORG_ID = "
+								+ "'AND S.EMAIL_SUBJECT ='t' AND U.ORG_ID = "
 								+ org_id + "AND U.ACTIVE = 'Y'";
 						ResultSet rs9 = stmt9.executeQuery(initQuery);
 
@@ -315,6 +341,15 @@ public class Mapping extends Inbox {
 							// Display values
 							System.out.print("R Initial Application Stage  : "
 									+ applStage);
+						}
+						
+						// STEP 4: Execute a query
+						stmt39 = connection.createStatement();
+						String reqCode = "select (SEQ_REQUEST_CODE.nextval) Req from dual";
+						ResultSet rs39 = stmt39.executeQuery(reqCode);
+						while (rs39.next()) {
+							newReqCode = rs39.getInt("Req");
+							System.out.println(" New Request Code  : " + newReqCode);
 						}
 					}
 
@@ -333,20 +368,42 @@ public class Mapping extends Inbox {
 							.println("Updated Flag Only when the Type of Request is not matching");
 				}
 			}
+			
+			if (newReqCode != 0){
 			// STEP 4: Execute a query
-			System.out.println("Creating statement.11..Application Stage : "
-					+ applStage + "Email Id : " + email_id);
+			
+			System.out
+					.println("Creating statement.11.in Mapping D  .Application Stage : "
+							+ applStage + "Email Id : " + email_id);
 			stmt10 = connection.createStatement();
 			String updateTableSQL = "UPDATE EMAIL_LOG SET APPLSTAGE = '"
 					+ applStage
-					+ "', SUCCESS_FLAG = 'S' , PROCESS_FLAG= 'Y', SUCCESS_FLAG_UPD_DT = TO_CHAR(SYSDATE,'dd/MON/yy') WHERE EMAIL_ID = '"
+					+ "', SUCCESS_FLAG = 'S' , PROCESS_FLAG= 'Y', SUCCESS_FLAG_UPD_DT = TO_CHAR(SYSDATE,'dd/MON/yy') ,REQUEST_CODE = '"
+					+ newReqCode
+					+ "'WHERE EMAIL_ID = '"
 					+ email_id + "' AND ACTIVE = 'Y'";
 			ResultSet updateResult = stmt10.executeQuery(updateTableSQL);
 			System.out.println("Query : " + updateTableSQL);
 			// STEP 6: Clean-up environment
-			System.out.println("Updated Flag");
+			System.out.println("Updated Flag with the request code");
 			updateResult.close();
-			rs.close();
+			}else{
+				System.out
+				.println("Creating statement.11.in Mapping P.Application Stage : "
+						+ applStage + "Email Id : " + email_id);
+		stmt55 = connection.createStatement();
+		String updateTableSQL = "UPDATE EMAIL_LOG SET APPLSTAGE = '"
+				+ applStage
+				+ "', SUCCESS_FLAG = 'S' , PROCESS_FLAG= 'Y', SUCCESS_FLAG_UPD_DT = TO_CHAR(SYSDATE,'dd/MON/yy'),REQUEST_CODE = '" 
+				+ newReqCode
+				+"' WHERE EMAIL_ID = '"
+				+ email_id + "' AND ACTIVE = 'Y'";
+		ResultSet updateResult = stmt55.executeQuery(updateTableSQL);
+		System.out.println("Query : " + updateTableSQL);
+		// STEP 6: Clean-up environment
+		System.out.println("Updated Flag without the request code");
+		updateResult.close();
+			}
 			stmt.close();
 			connection.close();
 		} catch (Exception e) {
@@ -357,4 +414,5 @@ public class Mapping extends Inbox {
 
 		}
 	}
+	// }
 }

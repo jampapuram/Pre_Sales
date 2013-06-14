@@ -4,14 +4,17 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +38,7 @@ public class Inbox {
 	public String fromEmailAddress = "";
 	public String toEmailAddress;
 	public String ccEmailAddress = "";
-	public String subject = "";
+	public static String subject = "";
 	public Date sentTime = null;
 	public Object content = "";
 	public String attachmentFlag = "";
@@ -50,6 +53,7 @@ public class Inbox {
 	public String emailResponseFlag = "";
 	public String newContent = "";
 	public String mailRequestCode = "";
+	public String mailCode = "";
 
 	public void readInbox() {
 		try { // Get system properties
@@ -103,18 +107,18 @@ public class Inbox {
 								.println("This is without from email address");
 
 					}
-				
+
 					for (int j = 0; j < a.length; j++) {
 						String to_EmailAddress = a[j].toString();
 						Matcher to = p.matcher(to_EmailAddress);
 						if (to.find()) {
 							toEmailAddress = (to.group().subSequence(1, to
-									.group().length() - 1)).toString();						
+									.group().length() - 1)).toString();
 						} else {
 							toEmailAddress = a[j].toString();
-							
+
 						}
-      
+
 					}
 
 					String cc = InternetAddress.toString(message[i]
@@ -178,10 +182,23 @@ public class Inbox {
 														.length() - 1))
 												.toString();
 										System.out
-												.println("Mail Content Request Code  : "
+												.println("Mail Content Request Code for Request No : "
 														+ mailRequestCode);
 									}
+								}else if (newContent.contains("Email No :")){
+									Pattern c = Pattern.compile("\\<.*\\>");
+									Matcher t = c.matcher(newContent);
+									if (t.find()) {
+										mailCode = (t.group()
+												.subSequence(1, t.group()
+														.length() - 1))
+												.toString();
+										System.out
+												.println("Mail Content Request Code for Email No  : "
+														+ mailCode);
+									}
 								}
+								attachmentFlag = "N";
 								// content = getText(bodyPart);
 							}
 						}
@@ -233,17 +250,63 @@ public class Inbox {
 			attachmentFlag = "Y";
 			System.out.println("Attachment: " + part.getFileName());
 			attachmentName = part.getFileName();
-			if (subject != null
-					&& (subject != ("Approval Request")
-							|| subject != ("Approved")
-							|| subject != ("Rejected")
-							|| subject != ("Handover to Accounts") || subject != ("Handover to DP"))) {
-				saveFile(part.getFileName(), part.getInputStream());
+			if (subject != null) {
+
+				ArrayList al = new ArrayList();
+				Connection connection = null;
+				Statement stmt = null;
+				String subjectQuery = null;
+				Properties prop = new Properties();
+
+				try {
+					prop.load(new FileInputStream("config.properties"));
+					
+					connection = DriverManager.getConnection(
+							prop.getProperty("database"), prop.getProperty("dbuser"),
+							prop.getProperty("dbpassword"));
+					Class.forName("oracle.jdbc.driver.OracleDriver");
+					stmt = connection.createStatement();
+					subjectQuery = "select U.EMAIL_SUBJECT from UM_WF_STAGE_EMAIL_MAPPING u ";
+					ResultSet rsm = stmt.executeQuery(subjectQuery);
+
+					while (rsm.next()) {
+						al.add(rsm.getString("EMAIL_SUBJECT"));
+					}
+					System.out.println("Array list : " + al);
+					if (!al.contains(subject)) {
+						System.out.println(" Does not Contains");
+						attachmentFlag = "Y";
+						System.out.println("Attachment: " + part.getFileName());
+						attachmentName = part.getFileName();
+						saveFile(part.getFileName(), part.getInputStream());
+					} else {
+						System.out.println("Contains ");
+						attachmentFlag = "N";
+						System.out.println("Other: " + dposition);
+					}
+				} catch (ClassNotFoundException e) {
+					System.out.println("Where is your Oracle JDBC Driver?");
+					e.printStackTrace();
+					return;
+				} catch (SQLException e) {
+					System.out.println("Sql Exception ?");
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (Exception e) {
+
+					System.out.println("Connection Failed! Check output console");
+					e.printStackTrace();
+					return;
+				}
+			
 			}
-		} else {
-			attachmentFlag = "N";
-			System.out.println("Other: " + dposition);
-		}
+			}
 	}
 
 	public void saveFile(String filename, InputStream input) throws IOException {
@@ -417,6 +480,14 @@ public class Inbox {
 
 	public void setMailRequestCode(String mailRequestCode) {
 		this.mailRequestCode = mailRequestCode;
+	}
+
+	public String getMailCode() {
+		return mailCode;
+	}
+
+	public void setMailCode(String mailCode) {
+		this.mailCode = mailCode;
 	}
 
 }

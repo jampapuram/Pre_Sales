@@ -1,5 +1,5 @@
 --------------------------------------------------------
---  File created - Sunday-June-02-2013   
+--  File created - Friday-June-14-2013   
 --------------------------------------------------------
 --------------------------------------------------------
 --  DDL for Table UM_WF_STAGE_EMAIL_MAPPING
@@ -18,16 +18,6 @@
   TABLESPACE "HDM_TBS" ;
 REM INSERTING into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING
 SET DEFINE OFF;
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (1,1,9000,'D',null);
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (2,3,9000,'D','Approval Request');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (3,4,9000,'D','Approved');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (4,6,9000,'D','Handover to Accounts');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (5,7,9000,'P',null);
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (6,9,9000,'P','Approval Request');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (7,10,9000,'P','Approved');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (8,12,9000,'P','Handover to DP');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (11,13,9000,'D','Rejected');
-Insert into HEIS_SU.UM_WF_STAGE_EMAIL_MAPPING (WSEM_ID,WS_ID,ORG_ID,TYPE_OF_REQUEST,EMAIL_SUBJECT) values (12,15,9000,'P','Rejected');
 --------------------------------------------------------
 --  DDL for Index UWSEM_PK_WSEM_ID
 --------------------------------------------------------

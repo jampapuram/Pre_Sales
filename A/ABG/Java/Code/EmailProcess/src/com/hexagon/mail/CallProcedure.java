@@ -46,10 +46,10 @@ public class CallProcedure extends Inbox  {
 				String client_code = "";
 				String application_id = "";
 				String amount = "";
-				System.out.println("Creating statement...");
-
+				System.out.println("Creating statement..in Call Procedure.");
+//
 				stmt = dbConnection.createStatement();
-				String procedureQuery = "SELECT email_id,E.CLIENT_CODE,E.APPLICATION_ID,E.AMOUNT FROM EMAIL_ATTACHMENT_INFO E WHERE email_id = (SELECT MAX(t.email_id) FROM EMAIL_ATTACHMENT_INFO t )";
+				String procedureQuery = "SELECT email_id,E.CLIENT_CODE,E.APPLICATION_ID,E.AMOUNT FROM EMAIL_ATTACHMENT_INFO E WHERE email_id = (SELECT MAX(t.email_id) FROM EMAIL_ATTACHMENT_INFO t ) ";
 				ResultSet rs1 = stmt.executeQuery(procedureQuery);
 
 				// STEP 5: Extract data from result set

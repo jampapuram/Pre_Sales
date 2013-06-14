@@ -1,5 +1,5 @@
 --------------------------------------------------------
---  File created - Sunday-June-02-2013   
+--  File created - Friday-June-14-2013   
 --------------------------------------------------------
 --------------------------------------------------------
 --  DDL for Procedure SP_EL_DEDUP
@@ -27,7 +27,7 @@ BEGIN
       success_flag  ='D'
     WHERE email_id  =v_email_id;
   ELSE
-    UPDATE email_log SET success_flag ='W' WHERE email_id =v_email_id;
+    UPDATE email_log SET success_flag ='W',process_flag='Y' WHERE email_id =v_email_id;
   END IF;
 END;
 
